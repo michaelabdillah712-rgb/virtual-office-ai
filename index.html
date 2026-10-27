@@ -185,6 +185,52 @@
       SUPABASE_PUBLISHABLE_KEY
     );
 
+
+    
+async function loadTasks() {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("title");
+
+  const taskList = document.getElementById("taskList");
+  const taskMessage = document.getElementById("taskMessage");
+
+  if (error) {
+    taskMessage.textContent = "Gagal memuat tugas: " + error.message;
+    return;
+  }
+
+  taskList.replaceChildren();
+
+  if (!data || data.length === 0) {
+    taskMessage.textContent = "Belum ada tugas. Tambahkan tugas pertamamu!";
+    return;
+  }
+
+  taskMessage.textContent = "Jumlah tugas: " + data.length;
+
+  data.forEach((task) => {
+    const item = document.createElement("div");
+    const title = document.createElement("h4");
+    const description = document.createElement("p");
+    const status = document.createElement("p");
+
+    title.textContent = task.title;
+    description.textContent = task.description || "Tanpa deskripsi";
+    status.textContent = "Status: " + task.status;
+
+    item.append(title, description, status);
+    taskList.appendChild(item);
+  });
+}
+
+
     function showMessage(message) {
       status.textContent = message;
     }
