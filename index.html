@@ -188,6 +188,55 @@
 
     
 async function loadTasks() {
+  
+  
+document.getElementById("taskForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const titleInput = document.getElementById("taskTitle");
+  const descriptionInput = document.getElementById("taskDescription");
+  const taskMessage = document.getElementById("taskMessage");
+
+  const title = titleInput.value.trim();
+  const description = descriptionInput.value.trim();
+
+  if (!title) {
+    taskMessage.textContent = "Nama tugas wajib diisi.";
+    return;
+  }
+
+  const { data: { user }, error: userError } =
+    await supabase.auth.getUser();
+
+  if (userError || !user) {
+    taskMessage.textContent = "Silakan login kembali.";
+    return;
+  }
+
+  taskMessage.textContent = "Menyimpan tugas...";
+
+  const { error } = await supabase
+    .from("tasks")
+    .insert({
+      user_id: user.id,
+      title: title,
+      description: description || null,
+      status: "pending"
+    });
+
+  if (error) {
+    taskMessage.textContent = "Gagal menyimpan: " + error.message;
+    return;
+  }
+
+  titleInput.value = "";
+  descriptionInput.value = "";
+
+  await loadTasks();
+  taskMessage.textContent = "Tugas berhasil ditambahkan!";
+});
+
+  
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return;
