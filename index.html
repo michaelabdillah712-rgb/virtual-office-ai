@@ -65,11 +65,17 @@
     <section id="authPanel">
       <h2 id="formTitle">Daftar Karyawan</h2>
 
+
+      
       <form id="authForm">
-        <label for="name">Nama karyawan</label>
-        <input id="name" type="text"
-          maxlength="60" autocomplete="name"
-          placeholder="Nama kamu">
+        <div id="nameField">
+  <label for="name">Nama karyawan</label>
+  <input id="name" type="text"
+    maxlength="60" autocomplete="name"
+    placeholder="Nama kamu">
+</div>
+
+        
 
         <label for="email">Email</label>
         <input id="email" type="email"
@@ -184,7 +190,7 @@
         : "Sudah punya akun? Login";
 
       nameInput.required = !isLogin;
-      nameInput.parentElement.hidden = isLogin;
+      document.getElementById("nameField").hidden = isLogin;
       passwordInput.autocomplete = isLogin
         ? "current-password" : "new-password";
 
