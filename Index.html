@@ -103,36 +103,174 @@
     </p>
   </main>
 
-  <script type="module">
-    // Supabase akan dihubungkan pada langkah berikutnya.
-    const status = document.getElementById("status");
-    const authForm = document.getElementById("authForm");
-    const nameInput = document.getElementById("name");
-    const formTitle = document.getElementById("formTitle");
-    const submitBtn = document.getElementById("submitBtn");
-    const switchBtn = document.getElementById("switchBtn");
-    let isLogin = false;
+  
+<script type="module">
+  import { createClient } from
+    "https://esm.sh/@supabase/supabase-js@2";
+
+  // GANTI DENGAN NILAI DARI DASHBOARD SUPABASE
+  const SUPABASE_URL = "https://ttdpkcywrjujwejhnayr.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_RVwgBlY6jv9sK0I2JxU-zA_tFM_0lVc";
+
+  const status = document.getElementById("status");
+  const authForm = document.getElementById("authForm");
+  const nameInput = document.getElementById("name");
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const formTitle = document.getElementById("formTitle");
+  const submitBtn = document.getElementById("submitBtn");
+  const switchBtn = document.getElementById("switchBtn");
+  const authPanel = document.getElementById("authPanel");
+  const profilePanel = document.getElementById("profilePanel");
+
+  let isLogin = false;
+  let busy = false;
+
+  const configReady =
+    SUPABASE_URL.startsWith("https://") &&
+    SUPABASE_URL.endsWith(".supabase.co") &&
+    SUPABASE_PUBLISHABLE_KEY.length > 10 &&
+    !SUPABASE_PUBLISHABLE_KEY.includes("TEMPEL_");
+
+  if (!configReady) {
+    status.textContent =
+      "Konfigurasi belum lengkap. Isi Project URL dan publishable key.";
+  } else {
+    const supabase = createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+    function showMessage(message) {
+      status.textContent = message;
+    }
+
+    async function loadProfile(user) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("display_name, job_title, department")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        showMessage(
+          "Login berhasil, tetapi profil belum dapat dibaca. " +
+          "Periksa trigger dan kebijakan RLS."
+        );
+        return;
+      }
+
+      document.getElementById("profileName").textContent =
+        "Nama: " + data.display_name;
+      document.getElementById("profileJob").textContent =
+        "Jabatan: " + data.job_title;
+      document.getElementById("profileDepartment").textContent =
+        "Departemen: " + data.department;
+
+      authPanel.hidden = true;
+      profilePanel.hidden = false;
+      showMessage("Berhasil masuk ke Virtual Office AI.");
+    }
 
     switchBtn.addEventListener("click", () => {
       isLogin = !isLogin;
+
       formTitle.textContent = isLogin
         ? "Login Karyawan" : "Daftar Karyawan";
       submitBtn.textContent = isLogin ? "Login" : "Daftar";
       switchBtn.textContent = isLogin
         ? "Belum punya akun? Daftar"
         : "Sudah punya akun? Login";
+
       nameInput.required = !isLogin;
-      nameInput.hidden = isLogin;
       nameInput.parentElement.hidden = isLogin;
-      document.getElementById("password")
-        .autocomplete = isLogin ? "current-password" : "new-password";
+      passwordInput.autocomplete = isLogin
+        ? "current-password" : "new-password";
+
+      showMessage("Mode " + (isLogin ? "login" : "pendaftaran") + ".");
     });
 
-    authForm.addEventListener("submit", (event) => {
+    authForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      status.textContent =
-        "Formulir siap. Koneksi Supabase akan diaktifkan pada langkah berikutnya.";
+      if (busy) return;
+
+      busy = true;
+      submitBtn.disabled = true;
+      showMessage("Memproses...");
+
+      try {
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+
+        if (isLogin) {
+          const { data, error } = await supabase.auth
+            .signInWithPassword({ email, password });
+
+          if (error) throw error;
+
+          await loadProfile(data.user);
+        } else {
+          const displayName = nameInput.value.trim();
+
+          if (!displayName) {
+            throw new Error("Masukkan nama karyawan.");
+          }
+
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { display_name: displayName }
+            }
+          });
+
+          if (error) throw error;
+
+          if (data.session && data.user) {
+            await loadProfile(data.user);
+          } else {
+            showMessage(
+              "Pendaftaran diterima. Periksa email untuk " +
+              "konfirmasi, lalu login setelah akun aktif."
+            );
+          }
+        }
+      } catch (error) {
+        showMessage("Gagal: " + error.message);
+      } finally {
+        busy = false;
+        submitBtn.disabled = false;
+      }
     });
-  </script>
+
+    document.getElementById("logoutBtn")
+      .addEventListener("click", async () => {
+        const { error } = await supabase.auth.signOut();
+
+        if (error) {
+          showMessage("Logout gagal: " + error.message);
+          return;
+        }
+
+        profilePanel.hidden = true;
+        authPanel.hidden = false;
+        authForm.reset();
+        showMessage("Kamu sudah logout.");
+      });
+
+    // Memulihkan sesi jika pengguna sebelumnya sudah login.
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+      showMessage("Gagal memeriksa sesi login.");
+    } else if (data.session) {
+      await loadProfile(data.session.user);
+    } else {
+      showMessage("Supabase terhubung. Silakan daftar atau login.");
+    }
+  }
+</script>
+
 </body>
 </html>
