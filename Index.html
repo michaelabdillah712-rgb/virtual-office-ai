@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Virtual Office AI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      font-family: Arial, sans-serif;
+      color: #e8eefc;
+      background: #101827;
+    }
+    main {
+      max-width: 430px;
+      margin: 35px auto;
+      padding: 24px;
+      background: #1b2639;
+      border: 1px solid #35445c;
+      border-radius: 18px;
+    }
+    h1 { margin-bottom: 8px; }
+    p { color: #b7c4d9; line-height: 1.5; }
+    label { display: block; margin-top: 15px; }
+    input {
+      width: 100%;
+      margin-top: 7px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #53647e;
+      background: #101827;
+      color: white;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      border: 0;
+      border-radius: 8px;
+      background: #68a5ff;
+      color: #101827;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    button.secondary {
+      background: #35445c;
+      color: white;
+    }
+    #status {
+      overflow-wrap: anywhere;
+      margin-top: 16px;
+    }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🏢 Virtual Office AI</h1>
+    <p>Kantor virtualmu dimulai di sini.</p>
+
+    <section id="authPanel">
+      <h2 id="formTitle">Daftar Karyawan</h2>
+
+      <form id="authForm">
+        <label for="name">Nama karyawan</label>
+        <input id="name" type="text"
+          maxlength="60" autocomplete="name"
+          placeholder="Nama kamu">
+
+        <label for="email">Email</label>
+        <input id="email" type="email"
+          autocomplete="email" required>
+
+        <label for="password">Password</label>
+        <input id="password" type="password"
+          minlength="8" autocomplete="new-password"
+          required>
+
+        <button id="submitBtn" type="submit">
+          Daftar
+        </button>
+      </form>
+
+      <button id="switchBtn" class="secondary" type="button">
+        Sudah punya akun? Login
+      </button>
+    </section>
+
+    <section id="profilePanel" hidden>
+      <h2>Profil Karyawan</h2>
+      <p id="profileName"></p>
+      <p id="profileJob"></p>
+      <p id="profileDepartment"></p>
+      <button id="logoutBtn" type="button">Logout</button>
+    </section>
+
+    <p id="status" role="status" aria-live="polite">
+      Halaman siap. Koneksi Supabase belum diaktifkan.
+    </p>
+  </main>
+
+  <script type="module">
+    // Supabase akan dihubungkan pada langkah berikutnya.
+    const status = document.getElementById("status");
+    const authForm = document.getElementById("authForm");
+    const nameInput = document.getElementById("name");
+    const formTitle = document.getElementById("formTitle");
+    const submitBtn = document.getElementById("submitBtn");
+    const switchBtn = document.getElementById("switchBtn");
+    let isLogin = false;
+
+    switchBtn.addEventListener("click", () => {
+      isLogin = !isLogin;
+      formTitle.textContent = isLogin
+        ? "Login Karyawan" : "Daftar Karyawan";
+      submitBtn.textContent = isLogin ? "Login" : "Daftar";
+      switchBtn.textContent = isLogin
+        ? "Belum punya akun? Daftar"
+        : "Sudah punya akun? Login";
+      nameInput.required = !isLogin;
+      nameInput.hidden = isLogin;
+      nameInput.parentElement.hidden = isLogin;
+      document.getElementById("password")
+        .autocomplete = isLogin ? "current-password" : "new-password";
+    });
+
+    authForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      status.textContent =
+        "Formulir siap. Koneksi Supabase akan diaktifkan pada langkah berikutnya.";
+    });
+  </script>
+</body>
+</html>
