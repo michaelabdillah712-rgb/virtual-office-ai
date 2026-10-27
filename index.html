@@ -109,6 +109,43 @@
     </p>
   </main>
 
+
+
+<section id="dashboard" hidden>
+  <h2>🏢 Virtual Office</h2>
+
+  <div class="dashboard-card">
+    <h3>💰 Dompet Virtual</h3>
+    <p>Saldo koin: <strong id="coinBalance">0</strong> 🪙</p>
+  </div>
+
+  <div class="dashboard-card">
+    <h3>📋 Tambah Tugas</h3>
+    <form id="taskForm">
+      <input
+        id="taskTitle"
+        type="text"
+        placeholder="Nama tugas"
+        required
+      />
+
+      <textarea
+        id="taskDescription"
+        placeholder="Deskripsi tugas (opsional)"
+      ></textarea>
+
+      <button type="submit">Tambah Tugas</button>
+    </form>
+  </div>
+
+  <div class="dashboard-card">
+    <h3>🗂️ Daftar Tugas</h3>
+    <p id="taskMessage">Belum ada tugas.</p>
+    <div id="taskList"></div>
+  </div>
+</section>
+
+
   
 <script type="module">
   import { createClient } from
